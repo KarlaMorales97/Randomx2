@@ -4,6 +4,7 @@
 
 #define ship 0
 #define enemy 1
+#define muerte 2
  
 int randomCounter=0;
 int respuesta=0; 
@@ -20,9 +21,10 @@ int posZE=0;
 
 int Arreglo[16];
 int Botones[7]={0,0,0,0,0,0,0};
+int perdedor[6]={0,0,0,0,0,0};
 int contador=0;
 
-int Matrix[2][4][4][4]=
+int Matrix[3][4][4][4]=
 {
   {
     {
@@ -49,6 +51,32 @@ int Matrix[2][4][4][4]=
       {0,0,0,0},
       {0,0,0,0}
     } 
+  },
+  {
+    {
+      {0,0,0,0},
+      {0,0,0,0},
+      {0,0,0,0},
+      {0,0,0,0}
+    },
+    {
+      {0,0,0,0},
+      {0,0,0,0},
+      {0,0,0,0},
+      {0,0,0,0}
+    },
+    {
+      {0,0,0,0},
+      {0,0,0,0},
+      {0,0,0,0},
+      {0,0,0,0}
+    },
+    {
+      {0,0,0,0},
+      {0,0,0,0},
+      {0,0,0,0},
+      {0,0,0,0}
+    }
   },
   {
     {
@@ -155,6 +183,55 @@ void Mover(){
   }
 }
 
+void colision(){
+  
+  Matrix[muerte][posZ][posY][posX]=1;
+ 
+  perdedor[0]=posX-1;
+  perdedor[1]=posY-1;
+  perdedor[2]=posZ-1;
+  perdedor[3]=posX+1;
+  perdedor[4]=posY+1;
+  perdedor[5]=posZ+1;
+  
+
+    for(int i=0; i<9; i++){
+        perdedor[i]=constrain(perdedor[i],0,3);
+    }
+    
+    for(int k=perdedor[2]; k<=perdedor[5]; k++){
+      for(int i=perdedor[0]; i<=perdedor[3]; i++){
+        for(int j=perdedor[0]; j<=perdedor[3]; j++){
+          Matrix[muerte][k][i][j]=1;    
+        }
+      }    
+    }
+  
+ for(int scan=0; scan<5; scan++){ 
+    int barrido=0;
+    do{
+      barrido++;
+      for(int Nivel=0; Nivel<4; Nivel++){
+        for(int i=0; i<4; i++)
+          for(int j=0; j<4; j++){
+            Arreglo[contador]=Matrix[muerte][Nivel][i][j];
+            contador++;
+          }
+        ShiftRegister();
+        digitalWrite(Nivel, LOW);
+        limpiar(Nivel);
+      }
+      ShiftRegister();
+    }while(barrido<300);
+ }
+
+  for(int Nivel=0; Nivel<4; Nivel++)
+    for(int i=0; i<4; i++)
+      for(int j=0; j<4; j++)
+        Matrix[muerte][Nivel][i][j]=0;
+}
+
+
 void limpiar(int Nivel){
     contador=0;
     for(int x=0; x<16;x++)
@@ -173,20 +250,14 @@ void limpiar3D(){
       }     
 }
 
-void funcionRandom(){
-   for(int scan=0; scan<200; scan++){ 
-     Matrix[ship][random(0,4)][random(0,4)][random(0,4)]=1;
-     limpiar3D();
-     for(int Nivel=0; Nivel<4; Nivel++){
-      for(int i=0; i<4; i++)
-        for(int j=0; j<4; j++){
-          if(Matrix[ship][Nivel][i][j] == 1){
-          Matrix[ship][Nivel][i][j] == 1;
-          
-          }
-        }
-      }  
-    }
+void reiniciarJuego(){
+  posX=posY=posZ=0;
+  for(int i=0; i<9; i++)
+      perdedor[i]=0;
+  limpiar3D();
+  Matrix[ship][posZ][posY][posX]=1;
+  Matrix[enemy][posZE][posYE][posXE]=1; 
+  
 }
 
 void moverEnemigo(){
@@ -203,6 +274,12 @@ void loop()
     for(int Nivel=0; Nivel<4; Nivel++){
       for(int i=0; i<4; i++)
         for(int j=0; j<4; j++){
+
+          if(Matrix[enemy][Nivel][i][j]==1 && Matrix[ship][Nivel][i][j]==1){
+            colision();
+            delay(100);
+            reiniciarJuego();
+            }
 
           if(Matrix[enemy][Nivel][i][j] == 1){  
             Arreglo[contador]= 1;
